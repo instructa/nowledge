@@ -1,9 +1,9 @@
 {
-  "name": "mcp-deepwiki",
+  "name": "nowledge",
   "type": "module",
   "version": "0.0.7",
   "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab",
-  "description": "MCP server for fetch deepwiki.com and turn content into LLM readable markdown",
+  "description": "MCP server for fetch deepwiki.com and turn content into LLM readable markdown with vector search capabilities",
   "contributors": [
     {
       "name": "Kevin Kern",
@@ -19,25 +19,31 @@
   "keywords": [
     "mcp",
     "mcp-starter",
-    "model-context-protocol"
+    "model-context-protocol",
+    "vector-search",
+    "knowledge-base"
   ],
   "exports": {
     ".": "./dist/index.mjs",
     "./cli": "./bin/cli.mjs"
   },
   "bin": {
-    "mcp-instruct": "./bin/cli.mjs"
+    "mcp-instruct": "./bin/cli.mjs",
+    "nowledge": "./bin/nowledge.mjs"
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "models",
+    "native"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "unbuild && npm run chmod-run",
+    "build": "unbuild && npm run chmod-run && npm run nowledge-bin",
     "chmod-run": "node -e \"fs.chmodSync('dist/index.mjs', '755'); if (require('fs').existsSync('dist/cli.mjs')) require('fs').chmodSync('dist/cli.mjs', '755');\"",
+    "nowledge-bin": "node -e \"fs.writeFileSync('bin/nowledge.mjs', '#!/usr/bin/env node\\nimport { runMain } from \\'../dist/cli.mjs\\';\\nrunMain();', 'utf8'); fs.chmodSync('bin/nowledge.mjs', '755');\"",
     "start": "nodemon --exec 'tsx src/index.ts'",
     "dev:prepare": "nr build",
     "inspect": "npx @modelcontextprotocol/inspector@latest",
@@ -50,18 +56,25 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
-    "release": "tsx scripts/release.ts"
+    "release": "tsx scripts/release.ts",
+    "download-model": "HF_HUB_CACHE=./models npx transformers-cli download TaylorAI/bge-micro-v2",
+    "setup-sqlite-vec": "git clone https://github.com/asg017/sqlite-vec && cd sqlite-vec && make && cp build/libsqlite_vec.* ../native/"
   },
   "dependencies": {
     "@chatmcp/sdk": "^1.0.6",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@vitest/eslint-plugin": "^1.1.43",
+    "@xenova/transformers": "^2.15.1",
+    "better-sqlite3": "^9.4.0",
+    "chokidar": "^3.6.0",
     "citty": "^0.1.6",
     "eslint": "^9.25.1",
+    "glob": "^10.3.10",
     "h3": "^1.15.1",
     "hast-util-from-html": "^2.0.3",
     "hast-util-sanitize": "^5.0.2",
     "linkedom": "^0.18.9",
+    "markdown-it": "^14.0.0",
     "ofetch": "^1.4.1",
     "p-queue": "^8.1.0",
     "rehype-parse": "^9.0.1",
@@ -70,6 +83,7 @@
     "remark-gfm": "^4.0.1",
     "remark-stringify": "^11.0.0",
     "robots-parser": "^3.0.1",
+    "tokenizers": "^0.13.2",
     "undici": "^7.8.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
@@ -79,6 +93,8 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.12.0",
+    "@types/better-sqlite3": "^7.6.9",
+    "@types/markdown-it": "^13.0.7",
     "@types/node": "^22.14.1",
     "dotenv": "^16.5.0",
     "esbuild": "^0.25.2",
