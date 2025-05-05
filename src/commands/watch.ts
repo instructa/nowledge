@@ -6,6 +6,7 @@ import { CONFIG } from '../constants'
 import { splitMarkdown } from '../lib/chunker'
 import { extractor } from '../lib/embedder'
 import { VectorDB } from '../lib/storage'
+import { sourceArgs } from '../utils/cliArgs'
 
 export default defineCommand({
   meta: {
@@ -14,21 +15,7 @@ export default defineCommand({
   },
 
   args: {
-    source: {
-      type: 'positional',
-      description: 'Source directory to watch',
-      required: true,
-    },
-    db: {
-      type: 'string',
-      description: 'Path to the database file',
-      default: CONFIG.dbFileName,
-    },
-    verbose: {
-      type: 'boolean',
-      description: 'Enable verbose output',
-      default: false,
-    },
+    ...sourceArgs,
   },
 
   async run({ args }) {
@@ -76,7 +63,7 @@ export default defineCommand({
           // Clean existing entries
           db.deleteChunksByFilePath(relativePath)
 
-          // Split the content into chunks
+          // Split the content into chunks - now fixed in splitMarkdown
           const chunks = splitMarkdown(content, extractor.tokenizer)
 
           // Process each chunk
@@ -95,7 +82,7 @@ export default defineCommand({
           console.log(`Indexed ${chunks.length} chunks from ${relativePath}`)
         }
         catch (error) {
-          console.error(`Error processing ${relativePath}: ${error}`)
+          console.error(`Error processing ${relativePath}:`, error)
         }
       }
 
@@ -115,7 +102,7 @@ export default defineCommand({
           console.log(`Removed chunks for ${relativePath}`)
         }
         catch (error) {
-          console.error(`Error removing ${relativePath}: ${error}`)
+          console.error(`Error removing ${relativePath}:`, error)
         }
       }
 
@@ -138,7 +125,7 @@ export default defineCommand({
       return new Promise((resolve) => {})
     }
     catch (error) {
-      console.error(`Error during watch: ${error}`)
+      console.error(`Error during watch:`, error)
       return 1
     }
   },

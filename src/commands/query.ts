@@ -1,8 +1,9 @@
 import { defineCommand } from 'citty'
 import { CONFIG } from '../constants'
 import { extractor } from '../lib/embedder'
-import { VectorDB } from '../lib/storage'
+import { withDatabase } from '../utils/dbHelpers'
 import { summarizeResults } from '../lib/summariser'
+import { queryArgs } from '../utils/cliArgs'
 
 export default defineCommand({
   meta: {
@@ -11,21 +12,7 @@ export default defineCommand({
   },
 
   args: {
-    query: {
-      type: 'positional',
-      description: 'The query text',
-      required: true,
-    },
-    db: {
-      type: 'string',
-      description: 'Path to the database file',
-      default: CONFIG.dbFileName,
-    },
-    limit: {
-      type: 'number',
-      description: 'Maximum number of results to return',
-      default: CONFIG.maxResults,
-    },
+    ...queryArgs,
     summary: {
       type: 'boolean',
       description: 'Generate a summary of results',
@@ -51,90 +38,83 @@ export default defineCommand({
     const summaryLength = args.summaryLength || CONFIG.summaryLength
     const format = args.format as string
 
-    try {
-      // Initialize the embedder (model loading)
-      await extractor.ready()
+    // Generate embedding for the query
+    await extractor.ready()
+    const queryEmbedding = await extractor.embed(query)
 
-      // Open the database
-      const db = new VectorDB(dbPath)
-      db.init()
-
-      // Generate embedding for the query
-      const queryEmbedding = await extractor.embed(query)
-
+    const result = await withDatabase(dbPath, async (db) => {
       // Search for similar chunks
-      const results = db.querySimilar(queryEmbedding, limit)
+      return db.querySimilar(queryEmbedding, limit)
+    })
 
-      // Close the database
-      db.close()
+    if (result.exitCode !== 0) {
+      return result.exitCode
+    }
 
-      if (results.length === 0) {
-        console.log('No results found.')
-        return 0
-      }
-
-      // Handle different output formats
-      if (format === 'json') {
-        // JSON output
-        const output = {
-          query,
-          results: results.map(r => ({
-            content: r.content,
-            filePath: r.filePath,
-            distance: r.distance,
-          })),
-        }
-
-        if (summary) {
-          output.summary = summarizeResults(
-            results.map(r => r.content),
-            summaryLength,
-          )
-        }
-
-        console.log(JSON.stringify(output, null, 2))
-      }
-      else if (format === 'simple') {
-        // Simple text output
-        for (const result of results) {
-          console.log(`File: ${result.filePath} (distance: ${result.distance.toFixed(4)})`)
-          console.log('-'.repeat(80))
-          console.log(result.content)
-          console.log('-'.repeat(80))
-          console.log()
-        }
-
-        if (summary) {
-          console.log('SUMMARY:')
-          console.log('========')
-          console.log(summarizeResults(results.map(r => r.content), summaryLength))
-        }
-      }
-      else {
-        // Markdown output (default)
-        if (summary) {
-          console.log('# Summary\n')
-          console.log(summarizeResults(results.map(r => r.content), summaryLength))
-          console.log('\n---\n')
-        }
-
-        console.log('# Results\n')
-        for (const [i, result] of results.entries()) {
-          console.log(`## Result ${i + 1}: ${result.filePath}\n`)
-          console.log(result.content)
-          console.log(`\n_Distance: ${result.distance.toFixed(4)}_\n`)
-
-          if (i < results.length - 1) {
-            console.log('---\n')
-          }
-        }
-      }
-
+    const results = result.result
+    
+    if (results.length === 0) {
+      console.log('No results found.')
       return 0
     }
-    catch (error) {
-      console.error(`Error during query: ${error}`)
-      return 1
+
+    // Handle different output formats
+    if (format === 'json') {
+      // JSON output
+      const output = {
+        query,
+        results: results.map(r => ({
+          content: r.content,
+          filePath: r.filePath,
+          distance: r.distance,
+        })),
+      }
+
+      if (summary) {
+        output.summary = summarizeResults(
+          results.map(r => r.content),
+          summaryLength,
+        )
+      }
+
+      console.log(JSON.stringify(output, null, 2))
     }
+    else if (format === 'simple') {
+      // Simple text output
+      for (const result of results) {
+        console.log(`File: ${result.filePath} (distance: ${result.distance.toFixed(4)})`)
+        console.log('-'.repeat(80))
+        console.log(result.content)
+        console.log('-'.repeat(80))
+        console.log()
+      }
+
+      if (summary) {
+        console.log('SUMMARY:')
+        console.log('========')
+        console.log(summarizeResults(results.map(r => r.content), summaryLength))
+      }
+    }
+    else {
+      // Markdown output (default)
+      if (summary) {
+        console.log('# Summary\n')
+        console.log(summarizeResults(results.map(r => r.content), summaryLength))
+        console.log('\n---\n')
+      }
+
+      console.log('# Results\n')
+      for (const [i, result] of results.entries()) {
+        console.log(`## Result ${i + 1}: ${result.filePath}\n`)
+        console.log(result.content)
+        console.log(`\n_Distance: ${result.distance.toFixed(4)}_\n`)
+
+        if (i < results.length - 1) {
+          console.log('---\n')
+        }
+      }
+    }
+
+    return 0
   },
 })

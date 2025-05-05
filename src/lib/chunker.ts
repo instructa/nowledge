@@ -1,9 +1,5 @@
 import type { Tokenizer } from 'tokenizers'
-import MarkdownIt from 'markdown-it'
 import { CONFIG } from '../constants'
-
-// Create an instance of MarkdownIt parser
-const md = new MarkdownIt('commonmark')
 
 interface ChunkMeta {
   content: string
@@ -13,8 +9,7 @@ interface ChunkMeta {
 }
 
 /**
- * Split markdown content into chunks respecting code blocks and maintaining
- * context with overlapping tokens.
+ * Split markdown content into chunks maintaining context with overlapping paragraphs.
  *
  * @param content The markdown content to split
  * @param tokenizer The tokenizer to use for calculating token counts
@@ -32,11 +27,6 @@ export function splitMarkdown(content: string, tokenizer: Tokenizer): string[] {
       end: match.index + match[0].length,
       content: match[0],
     })
-  }
-
-  // Check if a position is inside a code block
-  const isInCodeBlock = (pos: number): boolean => {
-    return codeBlocks.some(block => pos >= block.start && pos <= block.end)
   }
 
   // Split the content into paragraphs
@@ -57,7 +47,7 @@ export function splitMarkdown(content: string, tokenizer: Tokenizer): string[] {
         })
         currentParagraph = ''
       }
-      startIndex += line.length + 1 // +1 for the newline
+      // Blank line handled – index will be updated at end of loop
     }
     else {
       // If we're starting a new paragraph and the line starts a code block,
@@ -103,15 +93,18 @@ export function splitMarkdown(content: string, tokenizer: Tokenizer): string[] {
       // Create the chunk
       chunks.push(currentChunk.map(p => p.content).join('\n\n'))
 
+      // Store the previous chunk before clearing it for overlap processing
+      const previousChunk = [...currentChunk]
+      
       // Start a new chunk with overlap
       let overlapTokens = 0
-      let i = currentChunk.length - 1
       currentChunk = []
       currentTokenCount = 0
 
       // Add paragraphs from the end of the previous chunk to create overlap
+      let i = previousChunk.length - 1
       while (i >= 0 && overlapTokens < CONFIG.chunkOverlap) {
-        const para = paragraphs[i]
+        const para = previousChunk[i]
         currentChunk.unshift(para)
         overlapTokens += para.tokenCount
         currentTokenCount += para.tokenCount

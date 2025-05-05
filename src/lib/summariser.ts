@@ -1,9 +1,19 @@
-import model from 'wink-eng-lite-web-model'
-import winkNLP from 'wink-nlp'
 import { CONFIG } from '../constants'
 
-// Initialize winkNLP
-const nlp = winkNLP(model)
+// Lazy-load NLP libraries
+let nlpInstance: any = null
+let modelInstance: any = null
+
+/**
+ * Initialize the NLP model lazily
+ */
+function getNLP() {
+  if (!nlpInstance) {
+    modelInstance = require('wink-eng-lite-web-model')
+    nlpInstance = require('wink-nlp')(modelInstance)
+  }
+  return nlpInstance
+}
 
 /**
  * Extract a summary from markdown text by selecting the most important sentences
@@ -17,6 +27,7 @@ export function summarizeText(text: string, maxSentences = CONFIG.summaryLength)
   const cleanText = text.replace(/```[\s\S]*?```/g, '')
 
   // Process the text
+  const nlp = getNLP()
   const doc = nlp.readDoc(cleanText)
 
   if (doc.sentences().length() === 0) {

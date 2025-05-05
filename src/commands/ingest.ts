@@ -5,7 +5,8 @@ import { globSync } from 'glob'
 import { CONFIG } from '../constants'
 import { splitMarkdown } from '../lib/chunker'
 import { extractor } from '../lib/embedder'
-import { VectorDB } from '../lib/storage'
+import { withDatabase } from '../utils/dbHelpers'
+import { sourceArgs } from '../utils/cliArgs'
 
 export default defineCommand({
   meta: {
@@ -14,25 +15,11 @@ export default defineCommand({
   },
 
   args: {
-    source: {
-      type: 'positional',
-      description: 'Source directory or file pattern to ingest',
-      required: true,
-    },
-    db: {
-      type: 'string',
-      description: 'Path to the database file',
-      default: CONFIG.dbFileName,
-    },
+    ...sourceArgs,
     clean: {
       type: 'boolean',
       description: 'Clean existing entries for files being ingested',
       default: true,
-    },
-    verbose: {
-      type: 'boolean',
-      description: 'Enable verbose output',
-      default: false,
     },
   },
 
@@ -42,25 +29,18 @@ export default defineCommand({
     const verbose = args.verbose as boolean
     const clean = args.clean as boolean
 
-    try {
-      // Initialize the embedder (model loading)
-      await extractor.ready()
+    // Find files to ingest
+    const filePaths = globSync(source, { absolute: true })
 
-      // Open the database
-      const db = new VectorDB(dbPath)
-      db.init()
+    if (filePaths.length === 0) {
+      console.error(`No files found matching pattern: ${source}`)
+      return 1
+    }
 
-      // Find files to ingest
-      const filePaths = globSync(source, { absolute: true })
+    console.log(`Found ${filePaths.length} files to process...`)
+    const startTime = Date.now()
 
-      if (filePaths.length === 0) {
-        console.error(`No files found matching pattern: ${source}`)
-        return 1
-      }
-
-      console.log(`Found ${filePaths.length} files to process...`)
-      const startTime = Date.now()
-
+    const result = await withDatabase(dbPath, async (db) => {
       for (const [index, filePath] of filePaths.entries()) {
         // Skip non-markdown files
         if (!filePath.toLowerCase().endsWith('.md')) {
@@ -103,17 +83,16 @@ export default defineCommand({
           })
         }
       }
+      
+      return filePaths.length
+    })
 
-      // Close the database
-      db.close()
-
-      const duration = (Date.now() - startTime) / 1000
+    const duration = (Date.now() - startTime) / 1000
+    
+    if (result.exitCode === 0) {
       console.log(`Ingestion complete! Processed ${filePaths.length} files in ${duration.toFixed(2)}s`)
-      return 0
     }
-    catch (error) {
-      console.error(`Error during ingestion: ${error}`)
-      return 1
-    }
+    
+    return result.exitCode
   },
 })

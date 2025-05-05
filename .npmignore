@@ -1,0 +1,49 @@
+# Source files
+src/
+tests/
+examples/
+
+# Build artifacts
+native/sqlite-vec
+native/*.o
+native/build/
+native/bin/
+native/obj/
+.sqlite-vec/
+
+# Development files
+.github/
+.vscode/
+.idea/
+.git/
+.gitignore
+.eslintrc
+.eslintignore
+.editorconfig
+.prettierrc
+.babelrc
+tsconfig.json
+vitest.config.ts
+*.log
+*.tsbuildinfo
+
+# Temporary files
+.cache/
+.temp/
+tmp/
+temp/
+*.tmp
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Scripts
+scripts/

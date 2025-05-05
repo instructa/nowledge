@@ -42,7 +42,7 @@ export function loadConfig() {
       config = { ...config, ...userConfig }
     }
     catch (error) {
-      console.warn(`Warning: Failed to parse nowledge.config.json: ${error}`)
+      console.warn(`Warning: Failed to parse nowledge.config.json:`, error)
     }
   }
 

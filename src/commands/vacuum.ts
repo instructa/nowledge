@@ -1,6 +1,6 @@
 import { defineCommand } from 'citty'
-import { CONFIG } from '../constants'
-import { VectorDB } from '../lib/storage'
+import { withDatabase } from '../utils/dbHelpers'
+import { commonArgs } from '../utils/cliArgs'
 
 export default defineCommand({
   meta: {
@@ -9,35 +9,22 @@ export default defineCommand({
   },
 
   args: {
-    db: {
-      type: 'string',
-      description: 'Path to the database file',
-      default: CONFIG.dbFileName,
-    },
+    ...commonArgs,
   },
 
   async run({ args }) {
-    const dbPath = args.db || CONFIG.dbFileName
+    const dbPath = args.db
 
-    try {
-      // Open the database
-      const db = new VectorDB(dbPath)
-      db.init()
-
+    const result = await withDatabase(dbPath, async (db) => {
       console.log('Optimizing database...')
-
-      // Run vacuum to optimize the database
       db.vacuum()
+      return true
+    })
 
-      // Close the database
-      db.close()
-
+    if (result.exitCode === 0) {
       console.log('Database optimization complete.')
-      return 0
     }
-    catch (error) {
-      console.error(`Error during optimization: ${error}`)
-      return 1
-    }
+    
+    return result.exitCode
   },
 })

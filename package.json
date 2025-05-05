@@ -25,14 +25,13 @@
   ],
   "exports": {
     ".": "./dist/index.mjs",
-    "./cli": "./bin/cli.mjs"
+    "./cli": "./dist/bin/cli.mjs"
   },
   "bin": {
-    "mcp-instruct": "./bin/cli.mjs",
-    "nowledge": "./bin/nowledge.mjs"
+    "mcp-instruct": "./dist/bin/cli.mjs",
+    "nowledge": "./dist/bin/nowledge.mjs"
   },
   "files": [
-    "bin",
     "dist",
     "models",
     "native"
@@ -42,14 +41,14 @@
   },
   "scripts": {
     "build": "unbuild && npm run chmod-run && npm run nowledge-bin",
-    "chmod-run": "node -e \"fs.chmodSync('dist/index.mjs', '755'); if (require('fs').existsSync('dist/cli.mjs')) require('fs').chmodSync('dist/cli.mjs', '755');\"",
-    "nowledge-bin": "node -e \"fs.writeFileSync('bin/nowledge.mjs', '#!/usr/bin/env node\\nimport { runMain } from \\'../dist/cli.mjs\\';\\nrunMain();', 'utf8'); fs.chmodSync('bin/nowledge.mjs', '755');\"",
+    "chmod-run": "node -e \"fs.chmodSync('dist/index.mjs', '755'); if (require('fs').existsSync('dist/bin/cli.mjs')) require('fs').chmodSync('dist/bin/cli.mjs', '755');\"",
+    "nowledge-bin": "node -e \"fs.mkdirSync('dist/bin', { recursive: true }); fs.writeFileSync('dist/bin/nowledge.mjs', '#!/usr/bin/env node\\nimport { runMain } from \\'../cli.mjs\\';\\nrunMain();', 'utf8'); fs.chmodSync('dist/bin/nowledge.mjs', '755');\"",
     "start": "nodemon --exec 'tsx src/index.ts'",
     "dev:prepare": "nr build",
     "inspect": "npx @modelcontextprotocol/inspector@latest",
     "dev": "npx concurrently 'unbuild --stub' 'npm run inspect'",
-    "run-cli": "node bin/cli.mjs",
-    "dev-stdio": "npx concurrently 'npm run run-cli' 'npm run inspect node ./bin/cli.mjs'",
+    "run-cli": "node dist/bin/nowledge.mjs",
+    "dev-stdio": "npx concurrently 'npm run run-cli' 'npm run inspect node ./dist/bin/nowledge.mjs'",
     "dev-http": "npx concurrently 'npm run run-cli -- --http --port 4200' 'npm run inspect http://localhost:4200/mcp'",
     "dev-sse": "npx concurrently 'npm run run-cli -- --sse --port 4201' 'npm run inspect http://localhost:4201/sse'",
     "lint": "eslint",

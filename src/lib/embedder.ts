@@ -27,10 +27,41 @@ class Embedder {
       // Initialize the embedding pipeline
       this._pipeline = await pipeline('feature-extraction', 'TaylorAI/bge-micro-v2')
 
-      // Initialize the tokenizer - we'll use this for token counting
-      const tokenizerJsonPath = path.join(CONFIG.modelPath, 'tokenizer.json')
-      if (!fs.existsSync(tokenizerJsonPath)) {
-        throw new Error(`Tokenizer file not found at ${tokenizerJsonPath}. Make sure the model is downloaded.`)
+      // Get tokenizer directly from the pipeline when possible
+      try {
+        // First try to get the tokenizer directly from the pipeline
+        if (this._pipeline.tokenizer) {
+          this._tokenizer = this._pipeline.tokenizer
+          this._isReady = true
+          return
+        }
+      } catch (err) {
+        // Fall through to manual tokenizer loading
+      }
+
+      // Fallback: Search for tokenizer.json in the model cache directory
+      const findTokenizerInDir = (dir: string): string | null => {
+        if (!fs.existsSync(dir)) return null
+        
+        // Check if tokenizer.json exists directly in this directory
+        const tokenizerPath = path.join(dir, 'tokenizer.json')
+        if (fs.existsSync(tokenizerPath)) return tokenizerPath
+        
+        // Otherwise, check subdirectories recursively
+        const entries = fs.readdirSync(dir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const result = findTokenizerInDir(path.join(dir, entry.name))
+            if (result) return result
+          }
+        }
+        
+        return null
+      }
+      
+      const tokenizerJsonPath = findTokenizerInDir(CONFIG.modelPath)
+      if (!tokenizerJsonPath) {
+        throw new Error(`Tokenizer file not found in ${CONFIG.modelPath}. Make sure the model is downloaded.`)
       }
 
       this._tokenizer = await Tokenizer.fromFile(tokenizerJsonPath)

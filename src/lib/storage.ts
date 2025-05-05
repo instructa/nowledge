@@ -13,6 +13,9 @@ export interface Chunk {
 export class VectorDB {
   private db: Database.Database
   private initialized: boolean = false
+  private insertStmt: Database.Statement | null = null
+  private deleteByPathStmt: Database.Statement | null = null
+  private querySimilarStmt: Database.Statement | null = null
 
   constructor(dbPath: string = CONFIG.dbFileName) {
     // Ensure the database directory exists
@@ -72,6 +75,23 @@ export class VectorDB {
       END;
     `)
 
+    // Prepare statements for better performance
+    this.insertStmt = this.db.prepare(`
+      INSERT INTO chunk (content, file_path, embed)
+      VALUES (?, ?, ?);
+    `)
+
+    this.deleteByPathStmt = this.db.prepare(`
+      DELETE FROM chunk WHERE file_path = ?;
+    `)
+
+    this.querySimilarStmt = this.db.prepare(`
+      SELECT c.content, c.file_path, l2_distance(c.embed, ?) as distance
+      FROM chunk c
+      ORDER BY distance ASC
+      LIMIT ?;
+    `)
+
     this.initialized = true
   }
 
@@ -79,12 +99,11 @@ export class VectorDB {
    * Insert a chunk with content, file path, and embedding vector
    */
   public insertChunk(chunk: Chunk): number {
-    const stmt = this.db.prepare(`
-      INSERT INTO chunk (content, file_path, embed)
-      VALUES (?, ?, ?);
-    `)
+    if (!this.insertStmt) {
+      throw new Error('Database not initialized. Call init() first.')
+    }
 
-    const result = stmt.run(
+    const result = this.insertStmt.run(
       chunk.content,
       chunk.filePath,
       Buffer.from(new Uint8Array(chunk.embedding.buffer)),
@@ -97,10 +116,11 @@ export class VectorDB {
    * Delete all chunks for a given file path
    */
   public deleteChunksByFilePath(filePath: string): void {
-    const stmt = this.db.prepare(`
-      DELETE FROM chunk WHERE file_path = ?;
-    `)
-    stmt.run(filePath)
+    if (!this.deleteByPathStmt) {
+      throw new Error('Database not initialized. Call init() first.')
+    }
+
+    this.deleteByPathStmt.run(filePath)
   }
 
   /**
@@ -110,14 +130,11 @@ export class VectorDB {
     queryVector: Float32Array,
     limit: number = CONFIG.maxResults,
   ): Array<{ content: string, filePath: string, distance: number }> {
-    const stmt = this.db.prepare(`
-      SELECT c.content, c.file_path, l2_distance(c.embed, ?) as distance
-      FROM chunk c
-      ORDER BY distance ASC
-      LIMIT ?;
-    `)
+    if (!this.querySimilarStmt) {
+      throw new Error('Database not initialized. Call init() first.')
+    }
 
-    const results = stmt.all(
+    const results = this.querySimilarStmt.all(
       Buffer.from(new Uint8Array(queryVector.buffer)),
       limit,
     )
