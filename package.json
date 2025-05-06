@@ -28,7 +28,7 @@
     "./cli": "./bin/cli.mjs"
   },
   "bin": {
-    "mcp-nowledge": "./dist/bin/cli.mjs"
+    "mcp-nowledge": "./bin/cli.mjs"
   },
   "files": [
     "bin",

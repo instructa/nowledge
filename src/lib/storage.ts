@@ -27,12 +27,31 @@ export class VectorDB {
     // Initialize the database
     this.db = new Database(dbPath)
 
-    // Load the sqlite-vec extension
+    // Resolve and validate the sqlite-vec extension path
+    const resolvedExtPath = path.isAbsolute(SQLITE_VEC_EXTENSION)
+      ? SQLITE_VEC_EXTENSION
+      : path.resolve(process.cwd(), SQLITE_VEC_EXTENSION)
+
+    const nativeDir = path.resolve(process.cwd(), 'native')
+    if (!resolvedExtPath.startsWith(nativeDir + path.sep)) {
+      throw new Error(
+        `Refusing to load sqlite-vec extension from outside the native directory: ${resolvedExtPath}`,
+      )
+    }
+    if (!fs.existsSync(resolvedExtPath)) {
+      throw new Error(
+        `sqlite-vec extension not found at ${resolvedExtPath}. Did you run "pnpm run setup-sqlite-vec"?`,
+      )
+    }
+
+    // Load the validated extension
     try {
-      this.db.loadExtension(SQLITE_VEC_EXTENSION)
+      this.db.loadExtension(resolvedExtPath)
     }
     catch (error) {
-      throw new Error(`Failed to load sqlite-vec extension: ${error}. Make sure the extension is properly compiled and installed in the native/ directory.`)
+      throw new Error(
+        `Failed to load sqlite-vec extension at ${resolvedExtPath}: ${error}`,
+      )
     }
   }
 

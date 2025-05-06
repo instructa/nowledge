@@ -9,6 +9,10 @@ import { Agent, fetch } from 'undici'
 import { hasNonHtmlExtension } from '../utils/fileExtensions'
 
 const MAX_CONCURRENCY = Number(process.env.DEEPWIKI_CONCURRENCY ?? 5)
+// Maximum size for a single fetched HTML page (default 5 MiB)
+const MAX_PAGE_BYTES = Number(
+  process.env.DEEPWIKI_MAX_PAGE_BYTES ?? 5 * 1024 * 1024,
+)
 const RETRY_LIMIT = 3
 const BACKOFF_BASE_MS = 250
 
@@ -74,6 +78,17 @@ export async function crawl(options: CrawlOptions): Promise<CrawlResult> {
       while (true) {
         try {
           const res = await fetch(url, { dispatcher: agent })
+
+          // Reject early if reported Content-Length is too large
+          const clHeader = res.headers.get('content-length')
+          if (clHeader && Number(clHeader) > MAX_PAGE_BYTES) {
+            if (verbose) {
+              console.error(
+                `Skipped ${url.href} – declared size ${clHeader} bytes exceeds limit ${MAX_PAGE_BYTES}`,
+              )
+            }
+            return
+          }
           // Check Content-Type header for HTML
           const contentType = res.headers.get('content-type') || ''
           if (!contentType.includes('text/html')) {
@@ -81,6 +96,15 @@ export async function crawl(options: CrawlOptions): Promise<CrawlResult> {
           }
           const buf = await res.arrayBuffer()
           const bytes = buf.byteLength
+
+          if (bytes > MAX_PAGE_BYTES) {
+            if (verbose) {
+              console.error(
+                `Skipped ${url.href} – downloaded size ${bytes} bytes exceeds limit ${MAX_PAGE_BYTES}`,
+              )
+            }
+            return
+          }
           totalBytes += bytes
           const htmlStr = Buffer.from(buf).toString('utf8')
           html[key] = htmlStr

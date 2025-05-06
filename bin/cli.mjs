@@ -3,7 +3,7 @@
 import { fileURLToPath } from 'node:url'
 import { runMain } from '../dist/index.mjs'
 
-globalThis.__mcp_starter_cli__ = {
+globalThis.__nowledge__cli = {
   startTime: Date.now(),
   entry: fileURLToPath(import.meta.url),
 }
