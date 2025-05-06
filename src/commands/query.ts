@@ -44,7 +44,7 @@ export default defineCommand({
 
     const result = await withDatabase(dbPath, async (db) => {
       // Search for similar chunks
-      return db.querySimilar(queryEmbedding, limit)
+      return await db.querySimilar(queryEmbedding, limit)
     })
 
     if (result.exitCode !== 0) {

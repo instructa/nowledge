@@ -1,22 +1,31 @@
 services:
-  nowledge:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: nowledge:latest
-    volumes:
-      - nowledge_data:/data
-      - nowledge_models:/models          # Persist baked model files
-      # - ./models:/models:ro            # Uncomment if you prefer a host folder
-    ports:
-      - "4200:3000"
+  app:
+    build: .
     environment:
-      - NOWLEDGE_DB_FILE=/data/.nowledge.db
-      - NOWLEDGE_MODEL_PATH=/models
-    command: ["--http", "--port", "3000"]
+      # Point the code at rqlite's HTTP API inside the Compose network
+      RQLITE_URL: http://rqlite:4001
+    depends_on:
+      - rqlite
+    volumes:
+      - data:/data          # keep whatever .nowledge.db you still use
+      - models:/models
+    # expose anything your app needs (example)
+    ports:
+      - "3000:3000"
+
+  rqlite:
+    image: rqlite/rqlite:8.29.1   # or "latest"
+    environment:
+      # Ask the image to preload the vector-search extension
+      SQLITE_EXTENSIONS: "sqlite-vec"
+    command: ["-on-disk", "/rqlite/filedata"] # pick any dir inside the container
+    volumes:
+      - rqlite-data:/rqlite
+    ports:
+      - "4001:4001"        # HTTP API
+      - "4002:4002"        # Raft (leave open if you later add nodes)
 
 volumes:
-  nowledge_data:
-    driver: local
-  nowledge_models:
-    driver: local
+  data:
+  models:
+  rqlite-data:

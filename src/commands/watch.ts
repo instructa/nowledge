@@ -61,7 +61,7 @@ export default defineCommand({
           const content = fs.readFileSync(filePath, 'utf-8')
 
           // Clean existing entries
-          db.deleteChunksByFilePath(relativePath)
+          await db.deleteChunksByFilePath(relativePath)
 
           // Split the content into chunks - now fixed in splitMarkdown
           const chunks = splitMarkdown(content, extractor.tokenizer)
@@ -72,7 +72,7 @@ export default defineCommand({
             const embedding = await extractor.embed(chunk)
 
             // Store in the database
-            db.insertChunk({
+            await db.insertChunk({
               content: chunk,
               filePath: relativePath,
               embedding,

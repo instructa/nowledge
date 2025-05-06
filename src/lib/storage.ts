@@ -117,7 +117,7 @@ export class VectorDB {
   /**
    * Insert a chunk with content, file path, and embedding vector
    */
-  public insertChunk(chunk: Chunk): number {
+  public async insertChunk(chunk: Chunk): Promise<number> {
     if (!this.insertStmt) {
       throw new Error('Database not initialized. Call init() first.')
     }
@@ -134,7 +134,7 @@ export class VectorDB {
   /**
    * Delete all chunks for a given file path
    */
-  public deleteChunksByFilePath(filePath: string): void {
+  public async deleteChunksByFilePath(filePath: string): Promise<void> {
     if (!this.deleteByPathStmt) {
       throw new Error('Database not initialized. Call init() first.')
     }
@@ -145,10 +145,10 @@ export class VectorDB {
   /**
    * Query chunks by vector similarity
    */
-  public querySimilar(
+  public async querySimilar(
     queryVector: Float32Array,
     limit: number = CONFIG.maxResults,
-  ): Array<{ content: string, filePath: string, distance: number }> {
+  ): Promise<Array<{ content: string, filePath: string, distance: number }>> {
     if (!this.querySimilarStmt) {
       throw new Error('Database not initialized. Call init() first.')
     }
@@ -168,14 +168,14 @@ export class VectorDB {
   /**
    * Optimize the database
    */
-  public vacuum(): void {
+  public async vacuum(): Promise<void> {
     this.db.exec('VACUUM;')
   }
 
   /**
    * Close the database connection
    */
-  public close(): void {
+  public async close(): Promise<void> {
     this.db.close()
   }
 }

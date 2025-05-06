@@ -17,7 +17,7 @@ export default defineCommand({
 
     const result = await withDatabase(dbPath, async (db) => {
       console.log('Optimizing database...')
-      db.vacuum()
+      await db.vacuum()
       return true
     })
 

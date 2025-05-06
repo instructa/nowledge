@@ -62,7 +62,7 @@ export default defineCommand({
 
         // Clean existing entries if requested
         if (clean) {
-          db.deleteChunksByFilePath(relativePath)
+          await db.deleteChunksByFilePath(relativePath)
         }
 
         // Split the content into chunks
@@ -74,7 +74,7 @@ export default defineCommand({
           const embedding = await extractor.embed(chunk)
 
           // Store in the database
-          db.insertChunk({
+          await db.insertChunk({
             content: chunk,
             filePath: relativePath,
             embedding,

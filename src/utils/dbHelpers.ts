@@ -1,6 +1,7 @@
 import { CONFIG } from '../constants'
 import { extractor } from '../lib/embedder'
 import { VectorDB } from '../lib/storage'
+import { RqliteDB } from '../lib/rqliteDB'
 
 /**
  * Interface for the result of a database operation
@@ -25,16 +26,18 @@ export async function withDatabase<T>(
     // Initialize the embedder (model loading)
     await extractor.ready()
 
-    // Open the database
-    const db = new VectorDB(dbPath)
-    db.init()
+    // Decide backend
+    const db = process.env.RQLITE_URL
+      ? new RqliteDB(process.env.RQLITE_URL)
+      : new VectorDB(dbPath)
+    await db.init?.()    // both backends expose async init
 
     try {
       // Run the operation
       const result = await operation(db)
       
       // Close the database
-      db.close()
+      await db.close()
       
       return { result, exitCode: 0 }
     } catch (error) {
