@@ -67,7 +67,7 @@ You can run Nowledge using Docker for a portable, containerized experience:
 
    ```bash
    docker compose build            # or: docker compose up -d --build
-````
+   ```
 
 2. **Start the server in detached mode**
 
@@ -103,10 +103,10 @@ You can run Nowledge using Docker for a portable, containerized experience:
    ```bash
    # Initialize a new database
    docker run --rm -v nowledge_data:/data nowledge init
-   
+
    # Ingest markdown files
    docker run --rm -v nowledge_data:/data -v $(pwd)/docs:/workspace nowledge ingest "/workspace/**/*.md"
-   
+
    # Query the knowledge base
    docker run --rm -v nowledge_data:/data nowledge query "How does vector search work?"
    ```
