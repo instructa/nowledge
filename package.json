@@ -11,10 +11,10 @@
     }
   ],
   "license": "MIT",
-  "homepage": "https://github.com/regenrek/deepwiki-mcp",
+  "homepage": "https://github.com/instructa/nowledge",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/regenrek/deepwiki-mcp"
+    "url": "git+https://github.com/instructa/nowledge"
   },
   "keywords": [
     "mcp",
@@ -25,13 +25,13 @@
   ],
   "exports": {
     ".": "./dist/index.mjs",
-    "./cli": "./dist/bin/cli.mjs"
+    "./cli": "./bin/cli.mjs"
   },
   "bin": {
-    "mcp-instruct": "./dist/bin/cli.mjs",
-    "nowledge": "./dist/bin/nowledge.mjs"
+    "mcp-nowledge": "./dist/bin/cli.mjs"
   },
   "files": [
+    "bin",
     "dist",
     "models",
     "native"
