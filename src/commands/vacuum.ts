@@ -1,6 +1,6 @@
 import { defineCommand } from 'citty'
 import { withDatabase } from '../utils/dbHelpers'
-import { commonArgs } from '../utils/cliArgs'
+import { commonArgs } from './_shared'
 
 export default defineCommand({
   meta: {
@@ -24,7 +24,7 @@ export default defineCommand({
     if (result.exitCode === 0) {
       console.log('Database optimization complete.')
     }
-    
+
     return result.exitCode
   },
 })

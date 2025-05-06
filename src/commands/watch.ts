@@ -6,7 +6,7 @@ import { CONFIG } from '../constants'
 import { splitMarkdown } from '../lib/chunker'
 import { extractor } from '../lib/embedder'
 import { VectorDB } from '../lib/storage'
-import { sourceArgs } from '../utils/cliArgs'
+import { sourceArgs } from './_shared'
 
 export default defineCommand({
   meta: {
@@ -122,7 +122,7 @@ export default defineCommand({
       })
 
       // This command runs until interrupted
-      return new Promise((resolve) => {})
+      return new Promise<never>(() => {})
     }
     catch (error) {
       console.error(`Error during watch:`, error)

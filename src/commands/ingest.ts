@@ -6,14 +6,13 @@ import { CONFIG } from '../constants'
 import { splitMarkdown } from '../lib/chunker'
 import { extractor } from '../lib/embedder'
 import { withDatabase } from '../utils/dbHelpers'
-import { sourceArgs } from '../utils/cliArgs'
+import { sourceArgs } from './_shared'
 
 export default defineCommand({
   meta: {
     name: 'ingest',
     description: 'Ingest markdown files into the knowledge database',
   },
-
   args: {
     ...sourceArgs,
     clean: {
@@ -22,7 +21,6 @@ export default defineCommand({
       default: true,
     },
   },
-
   async run({ args }) {
     const dbPath = args.db || CONFIG.dbFileName
     const source = args.source as string
@@ -83,16 +81,16 @@ export default defineCommand({
           })
         }
       }
-      
+
       return filePaths.length
     })
 
     const duration = (Date.now() - startTime) / 1000
-    
+
     if (result.exitCode === 0) {
       console.log(`Ingestion complete! Processed ${filePaths.length} files in ${duration.toFixed(2)}s`)
     }
-    
+
     return result.exitCode
   },
 })

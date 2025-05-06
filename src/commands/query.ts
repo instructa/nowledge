@@ -1,9 +1,9 @@
 import { defineCommand } from 'citty'
 import { CONFIG } from '../constants'
 import { extractor } from '../lib/embedder'
-import { withDatabase } from '../utils/dbHelpers'
 import { summarizeResults } from '../lib/summariser'
-import { queryArgs } from '../utils/cliArgs'
+import { withDatabase } from '../utils/dbHelpers'
+import { queryArgs } from './_shared'
 
 export default defineCommand({
   meta: {
@@ -52,7 +52,7 @@ export default defineCommand({
     }
 
     const results = result.result
-    
+
     if (results.length === 0) {
       console.log('No results found.')
       return 0

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { defineCommand } from 'citty'
 import { CONFIG } from '../constants'
 import { VectorDB } from '../lib/storage'
-import { commonArgs } from '../utils/cliArgs'
+import { commonArgs } from './_shared'
 
 export default defineCommand({
   meta: {
@@ -38,7 +38,8 @@ export default defineCommand({
         }
         // If force is true and the file exists, delete it
         await fs.unlink(absolutePath)
-      } catch (error) {
+      }
+      catch (error) {
         // File doesn't exist, which is fine
       }
 
