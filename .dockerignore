@@ -1,0 +1,26 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Development artifacts
+node_modules
+dist
+test
+tests
+*.log
+.env
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Temporary files
+*~
+*.swp
+.DS_Store
+tmp
+
+# Data files (mount as volumes instead)
+.nowledge.db

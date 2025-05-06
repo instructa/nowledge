@@ -40,7 +40,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "unbuild && npm run chmod-run && npm run nowledge-bin",
+    "build": "unbuild --fail-on-warn=false && npm run chmod-run && npm run nowledge-bin",
     "chmod-run": "node -e \"fs.chmodSync('dist/index.mjs', '755'); if (require('fs').existsSync('dist/bin/cli.mjs')) require('fs').chmodSync('dist/bin/cli.mjs', '755');\"",
     "nowledge-bin": "node -e \"fs.mkdirSync('dist/bin', { recursive: true }); fs.writeFileSync('dist/bin/nowledge.mjs', '#!/usr/bin/env node\\nimport { runMain } from \\'../cli.mjs\\';\\nrunMain();', 'utf8'); fs.chmodSync('dist/bin/nowledge.mjs', '755');\"",
     "start": "nodemon --exec 'tsx src/index.ts'",

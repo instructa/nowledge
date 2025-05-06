@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  nowledge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nowledge:latest
+    volumes:
+      - nowledge_data:/data
+      - nowledge_models:/models          # Persist baked model files
+      # - ./models:/models:ro            # Uncomment if you prefer a host folder
+    ports:
+      - "4200:3000"
+    environment:
+      - NOWLEDGE_DB_FILE=/data/.nowledge.db
+      - NOWLEDGE_MODEL_PATH=/models
+    command: ["--http", "--port", "3000"]
+
+volumes:
+  nowledge_data:
+    driver: local
+  nowledge_models:
+    driver: local

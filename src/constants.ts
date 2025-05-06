@@ -9,26 +9,28 @@ export const DEFAULT_CONFIG = {
 
   // Model settings
   // Default path relative to project root, assuming models dir exists there
-  modelPath: path.join('models', 'bge-micro-v2'),
+  modelPath: process.env.NOWLEDGE_MODEL_PATH || path.join('models', 'bge-micro-v2'),
 
   // Database settings
   // Default filename, usually in the project root or execution dir
-  dbFileName: '.nowledge.db',
+  dbFileName: process.env.NOWLEDGE_DB_FILE || '.nowledge.db',
 
   // Query settings
-  maxResults: 5,
+  maxResults: Number(process.env.NOWLEDGE_MAX_RESULTS) || 5,
 
   // Summary settings
-  summaryLength: 10, // Number of sentences
+  summaryLength: Number(process.env.NOWLEDGE_SUMMARY_LENGTH) || 10, // Number of sentences
 }
 
 // Extension paths based on platform
 // Assumes native directory is relative to cwd where the app is run
-export const SQLITE_VEC_EXTENSION = process.platform === 'darwin'
-  ? path.join('native', 'libsqlite_vec.dylib')
-  : process.platform === 'win32'
-    ? path.join('native', 'sqlite-vec.dll')
-    : path.join('native', 'libsqlite_vec.so')
+export const SQLITE_VEC_EXTENSION = process.env.SQLITE_VEC_PATH || (
+  process.platform === 'darwin'
+    ? path.join('native', 'libsqlite_vec.dylib')
+    : process.platform === 'win32'
+      ? path.join('native', 'sqlite-vec.dll')
+      : path.join('native', 'libsqlite_vec.so')
+)
 
 // Load configuration from file if it exists
 export function loadConfig() {
