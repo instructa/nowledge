@@ -32,8 +32,9 @@ RUN test -f native/libsqlite_vec.so || \
         && mkdir -p /app/native \
         && cp dist/vec*.so /app/native/libsqlite_vec.so)
 
-# Compile TypeScript sources into the dist directory
-RUN pnpm run build \
+# Build the Rust ↔︎ Node addon, then compile TS, then prune dev deps
+RUN pnpm run build:native \
+    && pnpm run build \
     && pnpm prune --prod
 
 # --------------------------------------------------

@@ -57,7 +57,8 @@
     "test": "vitest",
     "release": "tsx scripts/release.ts",
     "download-model": "python scripts/download-model.py",
-    "setup-sqlite-vec": "git clone https://github.com/asg017/sqlite-vec && cd sqlite-vec && make && cp build/libsqlite_vec.* ../native/"
+    "setup-sqlite-vec": "git clone https://github.com/asg017/sqlite-vec && cd sqlite-vec && make && cp build/libsqlite_vec.* ../native/",
+    "build:native": "napi build --release --directory ./native-core --d ./native/tokenizer"
   },
   "dependencies": {
     "@chatmcp/sdk": "^1.0.6",
