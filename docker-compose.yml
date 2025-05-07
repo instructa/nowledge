@@ -1,22 +1,53 @@
 services:
-  nowledge:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: nowledge:latest
-    volumes:
-      - nowledge_data:/data
-      - nowledge_models:/models          # Persist baked model files
-      # - ./models:/models:ro            # Uncomment if you prefer a host folder
+  vector_db:
+    image: rqlite/rqlite:8.37.0
+    container_name: vector_db
     ports:
-      - "4200:3000"
+      - "4001:4001"
+      - "4002:4002"
+    volumes:
+      - rqlite_data:/data
     environment:
-      - NOWLEDGE_DB_FILE=/data/.nowledge.db
-      - NOWLEDGE_MODEL_PATH=/models
-    command: ["--http", "--port", "3000"]
+      SQLITE_EXTENSIONS: "sqlite-vec"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/readyz?level=deep"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  crawler:
+    build:
+      context: ./crawler
+    container_name: crawler
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  embedder:
+    build:
+      context: ./embedder
+    container_name: embedder
+    depends_on:
+      vector_db:
+        condition: service_started
+      crawler:
+        condition: service_started
+    environment:
+      RQLITE_URL: http://vector_db:4001
+      CRAWL_API:  http://crawler:8000
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
 
 volumes:
-  nowledge_data:
-    driver: local
-  nowledge_models:
-    driver: local
+  rqlite_data:
+
+networks:
+  default:
+    name: nowledge_net
