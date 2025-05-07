@@ -75,7 +75,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       tokenizers:
-        specifier: ^0.13.2
+        specifier: ^0.13.3
         version: 0.13.3
       undici:
         specifier: ^7.8.0

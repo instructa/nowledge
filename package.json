@@ -40,7 +40,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "unbuild --fail-on-warn=false && npm run chmod-run && npm run nowledge-bin",
+    "build": "unbuild --fail-on-warn=false && npm run chmod-run",
     "chmod-run": "node -e \"fs.chmodSync('dist/index.mjs', '755'); if (require('fs').existsSync('dist/bin/cli.mjs')) require('fs').chmodSync('dist/bin/cli.mjs', '755');\"",
     "nowledge-bin": "node -e \"fs.mkdirSync('dist/bin', { recursive: true }); fs.writeFileSync('dist/bin/nowledge.mjs', '#!/usr/bin/env node\\nimport { runMain } from \\'../cli.mjs\\';\\nrunMain();', 'utf8'); fs.chmodSync('dist/bin/nowledge.mjs', '755');\"",
     "start": "nodemon --exec 'tsx src/index.ts'",
@@ -56,7 +56,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "release": "tsx scripts/release.ts",
-    "download-model": "HF_HUB_CACHE=./models npx transformers-cli download TaylorAI/bge-micro-v2",
+    "download-model": "python scripts/download-model.py",
     "setup-sqlite-vec": "git clone https://github.com/asg017/sqlite-vec && cd sqlite-vec && make && cp build/libsqlite_vec.* ../native/"
   },
   "dependencies": {
@@ -82,7 +82,7 @@
     "remark-gfm": "^4.0.1",
     "remark-stringify": "^11.0.0",
     "robots-parser": "^3.0.1",
-    "tokenizers": "^0.13.2",
+    "tokenizers": "^0.13.3",
     "undici": "^7.8.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
