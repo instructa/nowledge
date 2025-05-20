@@ -1,6 +1,6 @@
-# Contributing to Deepwiki-to-Markdown MCP Server
+# Contributing to Nowledge MCP Server
 
-Thank you for considering contributing to the Deepwiki-to-Markdown MCP Server! This document provides guidelines and instructions for contributing.
+Thank you for considering contributing to the Nowledge MCP Server! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -50,7 +50,7 @@ For feature requests or enhancements:
 
 ## Development Workflow
 
-1. Clone the repository: `git clone https://github.com/regenrek/mcp-deepwiki.git`
+1. Clone the repository: `git clone https://github.com/instructa/nowledge.git`
 2. Install dependencies: `npm install`
 3. Run in development mode: `npm run dev-stdio` (or `dev-http`/`dev-sse`)
 4. Make your changes
@@ -68,7 +68,7 @@ src/
 │   ├── types.ts       # TypeScript interfaces & schemas
 │   └── utils.ts       # Utility functions
 ├── tools/             # MCP tool definitions
-│   ├── deepwiki.ts    # Deepwiki fetch tool
+│   ├── nowledge.ts    # Nowledge fetch tool
 │   └── mytool.ts      # Example tool
 ├── index.ts           # Main entry point
 ├── server.ts          # MCP server setup
@@ -114,4 +114,4 @@ Please update the documentation when necessary:
 
 If you have any questions, please open an issue or reach out to the maintainers.
 
-Thank you for contributing to the Deepwiki-to-Markdown MCP Server!
+Thank you for contributing to the Nowledge MCP Server!
