@@ -1,9 +1,9 @@
 {
-  "name": "mcp-deepwiki",
+  "name": "mcp-nowledge",
   "type": "module",
-  "version": "0.0.7",
+  "version": "0.0.1",
   "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab",
-  "description": "MCP server for fetch deepwiki.com and turn content into LLM readable markdown",
+  "description": "MCP server for fetching any public web content and turning it into LLM readable markdown",
   "contributors": [
     {
       "name": "Kevin Kern",
@@ -11,10 +11,10 @@
     }
   ],
   "license": "MIT",
-  "homepage": "https://github.com/regenrek/deepwiki-mcp",
+  "homepage": "https://github.com/instructa/nowledge",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/regenrek/deepwiki-mcp"
+    "url": "https://github.com/instructa/nowledge.git"
   },
   "keywords": [
     "mcp",

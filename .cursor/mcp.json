@@ -1,12 +1,12 @@
 {
   "mcpServers": {
-    "mcp-deepwiki": {
+    "mcp-nowledge": {
       "command": "node",
       "args": ["./bin/cli.mjs"]
     },
-    "mcp-deepwiki-live": {
+    "mcp-nowledge-live": {
       "command": "npx",
-      "args": ["-y", "mcp-deepwiki@latest"]
+      "args": ["-y", "mcp-nowledge@latest"]
     }
   }
 }
