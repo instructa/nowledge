@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,7 +17,7 @@ import (
 )
 
 const (
-	dim = 256
+	dim = 384 // bge-micro-v2 outputs 384-dim vectors
 )
 
 // --- load vocabulary ------------------------------------------------
@@ -62,9 +64,37 @@ func encode(text string) [dim]float32 {
 }
 
 // --- helpers --------------------------------------------------------
-func execSQL(stmts any) {
-	body, _ := json.Marshal(gin.H{"statements": stmts})
-	http.Post(os.Getenv("RQLITE_URL")+"/db/execute", "application/json", bytes.NewReader(body))
+func execSQL(stmts any) error {
+	body, err := json.Marshal(gin.H{"statements": stmts})
+	if err != nil {
+		return fmt.Errorf("failed to marshal SQL statements: %w", err)
+	}
+	resp, err := http.Post(os.Getenv("RQLITE_URL")+"/db/execute", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("failed to execute SQL: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("rqlite request failed with status %s: %s", resp.Status, string(bodyBytes))
+	}
+
+	var rqliteResp struct {
+		Results []struct {
+			Error string `json:"error"`
+		} `json:"results"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&rqliteResp); err != nil {
+		return fmt.Errorf("failed to decode rqlite response: %w", err)
+	}
+
+	for _, res := range rqliteResp.Results {
+		if res.Error != "" {
+			return fmt.Errorf("rqlite execution error: %s", res.Error)
+		}
+	}
+	return nil
 }
 
 func querySQL(q string) []any {
@@ -84,20 +114,23 @@ func querySQL(q string) []any {
 
 func main() {
 	// create vec table if it does not exist
-	execSQL(`CREATE VIRTUAL TABLE IF NOT EXISTS vec USING vec0(id TEXT, chunk TEXT, embedding FLOAT[256]);`)
+	err := execSQL(`CREATE VIRTUAL TABLE IF NOT EXISTS vec USING vec0(id TEXT, chunk TEXT, embedding FLOAT[384]);`)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create vec table: %v", err))
+	}
 
 	g := gin.Default()
 
 	// ---------- add URL ----------
 	g.POST("/add", func(c *gin.Context) {
-		var in struct{ URL string `+"`json:\"url\"`"+` }
+		var in struct{ URL string `json:"url"` }
 		if err := c.BindJSON(&in); err != nil {
 			c.String(http.StatusBadRequest, "invalid request: %v", err)
 			return
 		}
 
 		// crawl
-		reqBody := ` + "`" + `{"url":"` + "`" + ` + in.URL + ` + "`" + `","depth":2}` + "`" + `
+		reqBody := fmt.Sprintf("{\"url\":\"%s\",\"depth\":2}", in.URL)
 		resp, err := http.Post(os.Getenv("CRAWL_API")+"/crawl", "application/json", strings.NewReader(reqBody))
 		if err != nil {
 			c.String(http.StatusBadGateway, "crawler error: %v", err)
@@ -106,16 +139,17 @@ func main() {
 		defer resp.Body.Close()
 		var crawl struct {
 			Pages []struct {
-				URL      string `+"`json:\"url\"`"+`
-				Markdown string `+"`json:\"markdown\"`"+`
-			} `+"`json:\"pages\"`"+`
+				URL      string `json:"url"`
+				Markdown string `json:"markdown"`
+			} `json:"pages"`
 		}
 		json.NewDecoder(resp.Body).Decode(&crawl)
 
+		var insertErrors []string
 		for _, p := range crawl.Pages {
 			words := strings.Fields(p.Markdown)
 			for i := 0; i < len(words); i += 200 {
-				end := lo.Min(i+200, len(words))
+				end := lo.Min([]int{i + 200, len(words)})
 				chunk := strings.Join(words[i:end], " ")
 				vec := encode(chunk)
 				vecJSON, _ := json.Marshal(vec)
@@ -124,9 +158,24 @@ func main() {
 					"sql":        "INSERT INTO vec (id, chunk, embedding) VALUES (?,?,?)",
 					"parameters": []any{p.URL, chunk, string(vecJSON)},
 				}
-				execSQL([]any{stmt})
+				if err := execSQL([]any{stmt}); err != nil {
+					errMsg := fmt.Sprintf("failed to insert chunk for URL %s: %v", p.URL, err)
+					log.Printf("ERROR: %s", errMsg) // Force log output
+					c.Error(fmt.Errorf(errMsg))      // Gin standard error logging
+					insertErrors = append(insertErrors, errMsg)
+				}
 			}
 		}
+
+		if len(insertErrors) > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Errors occurred during indexing",
+				"errors":  insertErrors,
+				"indexed": len(crawl.Pages) - len(insertErrors), // Approximation
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{"indexed": len(crawl.Pages)})
 	})
 
