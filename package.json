@@ -56,6 +56,8 @@
     "@chatmcp/sdk": "^1.0.6",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@vitest/eslint-plugin": "^1.1.43",
+    "better-sqlite3": "^11.5.0",
+    "sentence-splitter": "^4.2.0",
     "citty": "^0.1.6",
     "eslint": "^9.25.1",
     "h3": "^1.15.1",

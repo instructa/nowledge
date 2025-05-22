@@ -4,7 +4,8 @@ import type { McpToolContext } from './types'
 import { runMain as _runMain, defineCommand } from 'citty'
 import { version } from '../package.json'
 import { createServer, startServer, stopServer } from './server'
-import { deepwikiTool } from './tools/deepwiki'
+import { fetchTool } from './tools/fetch'
+import { markdownIngestTool } from './tools/markdown-ingest'
 
 const cli = defineCommand({
   meta: {
@@ -26,9 +27,8 @@ const cli = defineCommand({
     process.on('SIGTERM', () => stopServer(mcp))
     process.on('SIGINT', () => stopServer(mcp))
 
-    deepwikiTool({ mcp } as McpToolContext)
-
-    // deepwikiSearchTool({ mcp } as McpToolContext)
+    fetchTool({ mcp } as McpToolContext)
+    markdownIngestTool({ mcp } as McpToolContext)
 
     if (mode === 'http') {
       await startServer(mcp, { type: 'http', port: Number(args.port), endpoint: args.endpoint })

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mcp-server:
+    build: .
+    volumes:
+      - ./markdown:/app/markdown:ro
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    command: ["--http", "--port", "3000"]
+    
+  # Optional: Run with stdio for testing
+  mcp-stdio:
+    build: .
+    volumes:
+      - ./markdown:/app/markdown:ro
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    command: ["--stdio"]
+    profiles:
+      - stdio
