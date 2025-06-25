@@ -108,6 +108,15 @@ export class VectorDB {
     return stmt.get(path) as DocRecord | null
   }
 
+  listAllDocs(): Array<{ id: string, path: string, summary: string, body_length: number }> {
+    const stmt = this.db.prepare(`
+      SELECT id, path, summary, LENGTH(body) as body_length
+      FROM docs
+      ORDER BY path
+    `)
+    return stmt.all() as any
+  }
+
   close() {
     this.db.close()
   }

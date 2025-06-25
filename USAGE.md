@@ -79,7 +79,27 @@ curl -X POST http://localhost:3000/mcp \
   }'
 ```
 
-### 3. `deepwiki`
+### 3. `markdown_list`
+Lists all ingested markdown documents in the database.
+
+**Parameters:**
+- None required
+
+**Example HTTP Request:**
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "markdown_list",
+      "arguments": {}
+    }
+  }'
+```
+
+### 4. `deepwiki`
 Fetches content from deepwiki.com repositories.
 
 **Parameters:**
@@ -92,7 +112,7 @@ Fetches content from deepwiki.com repositories.
 curl -X POST http://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{
-    "id": 3,
+    "id": 4,
     "method": "tools/call",
     "params": {
       "name": "deepwiki",
@@ -140,6 +160,20 @@ curl -X POST http://localhost:3000/mcp \
       "arguments": {
         "query": "vector search setup"
       }
+    }
+  }'
+```
+
+### 4. List All Documents
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "markdown_list",
+      "arguments": {}
     }
   }'
 ```

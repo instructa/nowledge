@@ -16,6 +16,10 @@ const SearchSchema = z.object({
   limit: z.number().optional().default(5).describe('Maximum results to return'),
 })
 
+const ListSchema = z.object({
+  // No parameters needed for listing all documents
+})
+
 // Simple sentence splitter
 function splitSentences(text: string): string[] {
   // Basic splitting on sentence boundaries
@@ -27,98 +31,73 @@ function splitSentences(text: string): string[] {
 const db = new VectorDB('docs.db')
 const embedder = new NomicEmbeddings()
 
-// Core ingest logic that can be used by CLI or MCP
-export async function ingestMarkdownFiles({ directory, pattern = '*.md' }: z.infer<typeof IngestSchema>) {
-  try {
-    const files = await readdir(directory)
-    const mdFiles = files.filter((f) => {
-      if (pattern === '*.md') {
-        return extname(f) === '.md'
-      }
-      return f.match(new RegExp(pattern.replace('*', '.*')))
-    })
-
-    let ingested = 0
-
-    for (const file of mdFiles) {
-      const path = join(directory, file)
-      const content = await readFile(path, 'utf-8')
-
-      // Generate embedding for full document
-      const docEmbedding = await embedder.embed(content)
-
-      // Generate extractive summary
-      const sentences = splitSentences(content)
-      let summary = content
-
-      if (sentences.length > 3) {
-        const sentEmbeddings = await embedder.embedBatch(sentences)
-        summary = extractiveSummary(sentences, sentEmbeddings, 3)
-      }
-
-      // Store in database
-      db.insertDoc(
-        {
-          id: randomUUID(),
-          path,
-          body: content,
-          summary,
-        },
-        docEmbedding,
-      )
-
-      ingested++
-    }
-
-    return {
-      success: true,
-      message: `Ingested ${ingested} markdown files from ${directory}`,
-      files: mdFiles,
-    }
-  }
-  catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
-}
-
-// Core search logic that can be used by CLI or MCP
-export async function searchMarkdownContent({ query, limit = 5 }: z.infer<typeof SearchSchema>) {
-  try {
-    // Generate query embedding
-    const queryEmbedding = await embedder.embed(query)
-
-    // Search database
-    const results = db.search(queryEmbedding, limit)
-
-    return {
-      success: true,
-      query,
-      results: results.map(r => ({
-        path: r.path,
-        summary: r.summary,
-        similarity: 1 - r.distance, // Convert distance to similarity
-      })),
-    }
-  }
-  catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
-}
-
-// MCP tool wrapper
+// MCP tool wrapper - simplified to match working pattern
 export function markdownIngestTool({ mcp }: McpToolContext) {
   // Ingest markdown files
   mcp.tool(
     'markdown_ingest',
     'Ingest markdown files into vector database for semantic search',
     IngestSchema.shape,
-    ingestMarkdownFiles,
+    async (input) => {
+      try {
+        const { directory, pattern = '*.md' } = input
+
+        const files = await readdir(directory)
+        const mdFiles = files.filter((f) => {
+          if (pattern === '*.md') {
+            return extname(f) === '.md'
+          }
+          return f.match(new RegExp(pattern.replace('*', '.*')))
+        })
+
+        let ingested = 0
+
+        for (const file of mdFiles) {
+          const path = join(directory, file)
+          const content = await readFile(path, 'utf-8')
+
+          // Generate embedding for full document
+          const docEmbedding = await embedder.embed(content)
+
+          // Generate extractive summary
+          const sentences = splitSentences(content)
+          let summary = content
+
+          if (sentences.length > 3) {
+            const sentEmbeddings = await embedder.embedBatch(sentences)
+            summary = extractiveSummary(sentences, sentEmbeddings, 3)
+          }
+
+          // Store in database
+          db.insertDoc(
+            {
+              id: randomUUID(),
+              path,
+              body: content,
+              summary,
+            },
+            docEmbedding,
+          )
+
+          ingested++
+        }
+
+        return {
+          content: [{
+            type: 'text',
+            text: `Successfully ingested ${ingested} markdown files from ${directory}. Files processed: ${mdFiles.join(', ')}`,
+          }],
+        }
+      }
+      catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `Error during ingestion: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+        }
+      }
+    },
   )
 
   // Search markdown content
@@ -126,6 +105,84 @@ export function markdownIngestTool({ mcp }: McpToolContext) {
     'markdown_search',
     'Search ingested markdown files using semantic similarity',
     SearchSchema.shape,
-    searchMarkdownContent,
+    async (input) => {
+      try {
+        const { query, limit = 5 } = input
+
+        // Generate query embedding
+        const queryEmbedding = await embedder.embed(query)
+
+        // Search database
+        const results = db.search(queryEmbedding, limit)
+
+        if (results.length === 0) {
+          return {
+            content: [{
+              type: 'text',
+              text: `No results found for query: "${query}"`,
+            }],
+          }
+        }
+
+        const formattedResults = results.map((r, i) =>
+          `${i + 1}. **${r.path}** (similarity: ${(1 - r.distance).toFixed(3)})\n   ${r.summary}`,
+        ).join('\n\n')
+
+        return {
+          content: [{
+            type: 'text',
+            text: `Search results for "${query}":\n\n${formattedResults}`,
+          }],
+        }
+      }
+      catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `Error during search: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+        }
+      }
+    },
+  )
+
+  // List all ingested documents
+  mcp.tool(
+    'markdown_list',
+    'List all ingested markdown documents in the database',
+    ListSchema.shape,
+    async () => {
+      try {
+        const documents = db.listAllDocs()
+
+        if (documents.length === 0) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'No documents have been ingested yet. Use markdown_ingest to add documents to the database.',
+            }],
+          }
+        }
+
+        const formattedDocs = documents.map((doc, i) =>
+          `${i + 1}. **${doc.path}** (${doc.body_length} chars)\n   ${doc.summary.length > 200 ? `${doc.summary.substring(0, 200)}...` : doc.summary}`,
+        ).join('\n\n')
+
+        return {
+          content: [{
+            type: 'text',
+            text: `Found ${documents.length} ingested documents:\n\n${formattedDocs}`,
+          }],
+        }
+      }
+      catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `Error listing documents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+        }
+      }
+    },
   )
 }

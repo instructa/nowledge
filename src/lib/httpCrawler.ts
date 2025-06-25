@@ -1,4 +1,4 @@
-import type { ProgressEvent } from '../schemas/deepwiki'
+import type { ProgressEvent } from '../schemas/fetch'
 import { Buffer } from 'node:buffer'
 import { performance } from 'node:perf_hooks'
 import { setTimeout } from 'node:timers/promises'
@@ -10,6 +10,7 @@ import { Agent, fetch } from 'undici'
 const MAX_CONCURRENCY = Number(process.env.DEEPWIKI_CONCURRENCY ?? 5)
 const RETRY_LIMIT = 3
 const BACKOFF_BASE_MS = 250
+const REQUEST_TIMEOUT_MS = Number(process.env.DEEPWIKI_REQUEST_TIMEOUT ?? 30000) // 30 seconds default
 
 export interface CrawlOptions {
   root: URL
@@ -32,7 +33,13 @@ export interface CrawlResult {
 export async function crawl(options: CrawlOptions): Promise<CrawlResult> {
   const { root, maxDepth, emit, verbose } = options
   const queue = new PQueue({ concurrency: MAX_CONCURRENCY })
-  const agent = new Agent({ keepAliveTimeout: 5_000 })
+  const agent = new Agent({
+    keepAliveTimeout: 10_000, // Increased keep-alive timeout
+    keepAliveMaxTimeout: 30_000,
+    connect: {
+      timeout: 10_000, // Connection timeout
+    },
+  })
   const crawled = new Set<string>()
   const html: Record<string, string> = {}
   const errors: { path: string, reason: string }[] = []
@@ -43,9 +50,22 @@ export async function crawl(options: CrawlOptions): Promise<CrawlResult> {
   const robotsUrl = new URL('/robots.txt', root)
   let robots: ReturnType<typeof robotsParser> | undefined
   try {
-    const res = await fetch(robotsUrl)
-    const body = await res.text()
-    robots = robotsParser(robotsUrl.href, body)
+    // Create abort controller for robots.txt timeout
+    const robotsController = new AbortController()
+    const robotsTimeoutId = globalThis.setTimeout(() => {
+      robotsController.abort()
+    }, REQUEST_TIMEOUT_MS)
+
+    try {
+      const res = await fetch(robotsUrl, { signal: robotsController.signal })
+      globalThis.clearTimeout(robotsTimeoutId)
+      const body = await res.text()
+      robots = robotsParser(robotsUrl.href, body)
+    }
+    catch (robotsError) {
+      globalThis.clearTimeout(robotsTimeoutId)
+      throw robotsError
+    }
   }
   catch {
     robots = undefined
@@ -236,44 +256,61 @@ export async function crawl(options: CrawlOptions): Promise<CrawlResult> {
       let retries = 0
       while (true) {
         try {
-          const res = await fetch(url, { dispatcher: agent })
-          // Check Content-Type header for HTML
-          const contentType = res.headers.get('content-type') || ''
-          if (!contentType.includes('text/html')) {
+          // Create abort controller for timeout
+          const controller = new AbortController()
+          const timeoutId = globalThis.setTimeout(() => {
+            controller.abort()
+          }, REQUEST_TIMEOUT_MS)
+
+          try {
+            const res = await fetch(url, {
+              dispatcher: agent,
+              signal: controller.signal,
+            })
+            globalThis.clearTimeout(timeoutId)
+
+            // Check Content-Type header for HTML
+            const contentType = res.headers.get('content-type') || ''
+            if (!contentType.includes('text/html')) {
+              return
+            }
+            const buf = await res.arrayBuffer()
+            const bytes = buf.byteLength
+            totalBytes += bytes
+            const htmlStr = Buffer.from(buf).toString('utf8')
+            html[key] = htmlStr
+
+            const elapsedMs = Math.round(performance.now() - start)
+            emit({
+              type: 'progress',
+              url: url.href,
+              bytes,
+              elapsedMs,
+              fetched: Object.keys(html).length,
+              queued: queue.size + queue.pending,
+              retries,
+            } as any)
+
+            // naïve link extraction via regex, replaced by DOM parse later
+            const linkRe
+              = /href="([^"#]+)(?:#[^"#]*)?"/gi
+            let match: RegExpExecArray | null
+            while (true) {
+              match = linkRe.exec(htmlStr)
+              if (!match)
+                break
+              try {
+                const child = new URL(match[1], url)
+                await enqueue(child, depth + 1)
+              }
+              catch {}
+            }
             return
           }
-          const buf = await res.arrayBuffer()
-          const bytes = buf.byteLength
-          totalBytes += bytes
-          const htmlStr = Buffer.from(buf).toString('utf8')
-          html[key] = htmlStr
-
-          const elapsedMs = Math.round(performance.now() - start)
-          emit({
-            type: 'progress',
-            url: url.href,
-            bytes,
-            elapsedMs,
-            fetched: Object.keys(html).length,
-            queued: queue.size + queue.pending,
-            retries,
-          } as any)
-
-          // naïve link extraction via regex, replaced by DOM parse later
-          const linkRe
-            = /href="([^"#]+)(?:#[^"#]*)?"/gi
-          let match: RegExpExecArray | null
-          while (true) {
-            match = linkRe.exec(htmlStr)
-            if (!match)
-              break
-            try {
-              const child = new URL(match[1], url)
-              await enqueue(child, depth + 1)
-            }
-            catch {}
+          catch (fetchError) {
+            globalThis.clearTimeout(timeoutId)
+            throw fetchError
           }
-          return
         }
         catch (err: any) {
           if (retries < RETRY_LIMIT) {

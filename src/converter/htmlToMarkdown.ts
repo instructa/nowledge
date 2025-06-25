@@ -1,4 +1,4 @@
-import type { ModeEnum } from '../schemas/deepwiki'
+import type { ModeEnum } from '../schemas/fetch'
 import { parseHTML } from 'linkedom'
 import rehypeParse from 'rehype-parse'
 import rehypeRemark from 'rehype-remark'
