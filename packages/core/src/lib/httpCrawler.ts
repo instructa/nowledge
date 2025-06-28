@@ -1,4 +1,4 @@
-import type { ProgressEvent } from "../schemas/nowledge";
+import type { ProgressEvent } from "../schemas";
 import { Buffer } from "node:buffer";
 import { performance } from "node:perf_hooks";
 import { setTimeout } from "node:timers/promises";

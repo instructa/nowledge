@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import type { McpToolContext } from "./types";
+import type { McpToolContext } from "@nowledge/core";
 import { runMain as _runMain, defineCommand } from "citty";
 import { version } from "../package.json";
 import { createServer, startServer, stopServer } from "./server";

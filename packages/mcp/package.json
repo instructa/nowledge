@@ -1,0 +1,24 @@
+{
+  "name": "@nowledge/mcp",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "mcp-nowledge": "./dist/index.mjs"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@nowledge/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@chatmcp/sdk": "^1.0.6",
+    "citty": "^0.1.6",
+    "h3": "^1.15.1",
+    "zod": "^3.24.3"
+  }
+}

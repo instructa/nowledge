@@ -1,0 +1,21 @@
+{
+  "name": "@nowledge/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "bin": {
+    "nowledge": "./dist/index.mjs",
+    "mcp-nowledge": "./dist/index.mjs"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@nowledge/core": "workspace:*",
+    "citty": "^0.1.6"
+  }
+}

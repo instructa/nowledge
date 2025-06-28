@@ -4,11 +4,11 @@ import type {
   FetchSuccess,
   TProgressEvent,
 } from "../schemas/nowledge";
-import type { McpToolContext } from "../types";
-import { htmlToMarkdown } from "../converter/htmlToMarkdown";
-import { resolveRepo } from "../utils/resolveRepoFetch";
-import { extractKeyword } from "../utils/extractKeyword";
-import { crawl } from "../lib/httpCrawler";
+import type { McpToolContext } from "@nowledge/core";
+import { htmlToMarkdown } from "@nowledge/core";
+import { resolveRepo } from "@nowledge/core";
+import { extractKeyword } from "@nowledge/core";
+import { crawl } from "@nowledge/core";
 import { FetchRequest } from "../schemas/nowledge";
 
 export function nowledgeTool({ mcp }: McpToolContext) {

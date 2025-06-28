@@ -1,4 +1,4 @@
-import type { ModeEnum } from "../schemas/nowledge";
+import type { ModeEnum } from "../schemas";
 import { parseHTML } from "linkedom";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";

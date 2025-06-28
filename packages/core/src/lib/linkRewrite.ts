@@ -1,4 +1,4 @@
-import type { ModeEnum } from "../schemas/nowledge";
+import type { ModeEnum } from "../schemas";
 import { fromHtml } from "hast-util-from-html";
 import { visit } from "unist-util-visit";
 
