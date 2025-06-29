@@ -1,13 +1,13 @@
 {
   "name": "@nowledge/core",
-  "version": "0.0.1",
   "type": "module",
+  "version": "0.0.1",
   "description": "Core utilities and types for Nowledge",
   "license": "MIT",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
     }
   },
   "main": "./dist/index.mjs",

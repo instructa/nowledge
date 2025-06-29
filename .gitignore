@@ -3,6 +3,7 @@ node_modules/
 
 # TypeScript output
 dist/
+packages/*/dist/
 
 # Environment variables
 .env

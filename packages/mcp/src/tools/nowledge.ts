@@ -1,92 +1,96 @@
-import type { z } from "zod";
 import type {
   ErrorEnvelope,
-  FetchSuccess,
-  TProgressEvent,
   McpToolContext,
-} from "@nowledge/core";
-import { 
+} from '@nowledge/core'
+import type { z } from 'zod'
+import {
+  crawl,
+  extractKeyword,
+  FetchRequest,
   htmlToMarkdown,
   resolveRepo,
-  extractKeyword,
-  crawl,
-  FetchRequest
-} from "@nowledge/core";
+} from '@nowledge/core'
 
 export function nowledgeTool({ mcp }: McpToolContext) {
   mcp.tool(
-    "nowledge_fetch",
-    "Fetch a public web URL and return Markdown",
+    'nowledge_fetch',
+    'Fetch a public web URL and return Markdown',
     FetchRequest.shape,
     async (input) => {
       // Normalize the URL to support short forms
-      const normalizedInput = { ...input };
-      if (typeof normalizedInput.url === "string") {
-        let url = normalizedInput.url.trim();
+      const normalizedInput = { ...input }
+      if (typeof normalizedInput.url === 'string') {
+        let url = normalizedInput.url.trim()
 
         // If it's already an explicit HTTP(S) URL, use as-is
         if (/^https?:\/\//.test(url)) {
           // do nothing
-        } else if (/^(?:[\w-]+\.)+[a-zA-Z]{2,}(?:\/.*)?$/.test(url)) {
+        }
+        else if (/^(?:[\w-]+\.)+[a-z]{2,}(?:\/.*)?$/i.test(url)) {
           // Looks like a domain (e.g., example.com or www.example.com/path)
-          url = `https://${url}`;
-        } else if (/^[^/]+\/[^/]+$/.test(url)) {
+          url = `https://${url}`
+        }
+        else if (/^[^/]+\/[^/]+$/.test(url)) {
           // owner/repo format, treat as GitHub repo
-          url = `https://github.com/${url}`;
-        } else if (/^[^/]+$/.test(url)) {
+          url = `https://github.com/${url}`
+        }
+        else if (/^[^/]+$/.test(url)) {
           // single word, try to resolve as GitHub repo
-          if (url.includes(" ")) {
-            const extracted = extractKeyword(url);
+          if (url.includes(' ')) {
+            const extracted = extractKeyword(url)
             if (extracted) {
-              url = extracted;
+              url = extracted
             }
           }
           try {
-            const repo = await resolveRepo(url); // "owner/repo"
-            url = `https://github.com/${repo}`;
-          } catch {
+            const repo = await resolveRepo(url) // "owner/repo"
+            url = `https://github.com/${repo}`
+          }
+          catch {
             // fallback: treat as a search term, but do not force a URL
             // Optionally, you could throw a validation error here
             // For now, just use as-is
-            url = `https://github.com/defaultuser/${url}`;
+            url = `https://github.com/defaultuser/${url}`
           }
-        } else {
+        }
+        else {
           // Try to extract a library keyword from a free form phrase
-          const extracted = extractKeyword(url);
+          const extracted = extractKeyword(url)
           if (extracted) {
             // Resolve the extracted keyword
             try {
-              const repo = await resolveRepo(extracted);
-              url = `https://github.com/${repo}`;
-            } catch {
-              url = `https://github.com/defaultuser/${extracted}`;
+              const repo = await resolveRepo(extracted)
+              url = `https://github.com/${repo}`
+            }
+            catch {
+              url = `https://github.com/defaultuser/${extracted}`
             }
           }
         }
 
-        normalizedInput.url = url;
+        normalizedInput.url = url
       }
-      const parse = FetchRequest.safeParse(normalizedInput);
+      const parse = FetchRequest.safeParse(normalizedInput)
       if (!parse.success) {
         const err: ErrorEnvelope = {
-          status: "error",
-          code: "VALIDATION",
-          message: "Request failed schema validation",
+          status: 'error',
+          code: 'VALIDATION',
+          message: 'Request failed schema validation',
           details: parse.error.flatten(),
-        };
-        return err;
+        }
+        return err
       }
 
-      const req = parse.data;
-      const root = new URL(req.url);
+      const req = parse.data
+      const root = new URL(req.url)
 
       if (req.maxDepth > 1) {
         const err: z.infer<typeof ErrorEnvelope> = {
-          status: "error",
-          code: "VALIDATION",
-          message: "maxDepth > 1 is not allowed",
-        };
-        return err;
+          status: 'error',
+          code: 'VALIDATION',
+          message: 'maxDepth > 1 is not allowed',
+        }
+        return err
       }
 
       // Nowledge: fetch from any public web URL (no domain restriction)
@@ -101,22 +105,22 @@ export function nowledgeTool({ mcp }: McpToolContext) {
         maxDepth: req.maxDepth,
         emit: emitProgress,
         verbose: req.verbose,
-      });
+      })
 
       // Convert each page
       const pages = await Promise.all(
         Object.entries(crawlResult.html).map(async ([path, html]) => ({
           path,
           markdown: await htmlToMarkdown(html, req.mode),
-        }))
-      );
+        })),
+      )
 
       return {
-        content: pages.map((page) => ({
-          type: "text",
+        content: pages.map(page => ({
+          type: 'text',
           text: `# ${page.path}\n\n${page.markdown}`,
         })),
-      };
-    }
-  );
+      }
+    },
+  )
 }

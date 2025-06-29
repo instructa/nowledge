@@ -1,23 +1,23 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
     "lib": ["ES2022"],
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "paths": {
       "@nowledge/core": ["./packages/core/src/index.ts"],
       "@nowledge/mcp": ["./packages/mcp/src/index.ts"],
       "@nowledge/cli": ["./packages/cli/src/index.ts"]
-    }
+    },
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": [
     "packages/*/src/**/*",

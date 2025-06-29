@@ -1,13 +1,28 @@
-import winkNLP from 'wink-nlp'
 import model from 'wink-eng-lite-web-model'
+import winkNLP from 'wink-nlp'
 
 const nlp = winkNLP(model)
 const its = nlp.its
 
 // Very small list of words we never want as a "library keyword”.
 const stopTerms = new Set([
-  'how', 'what', 'when', 'where', 'upgrade', 'update', 'new', 'latest',
-  'can', 'i', 'to', 'in', 'for', 'with', 'the', 'a', 'an',
+  'how',
+  'what',
+  'when',
+  'where',
+  'upgrade',
+  'update',
+  'new',
+  'latest',
+  'can',
+  'i',
+  'to',
+  'in',
+  'for',
+  'with',
+  'the',
+  'a',
+  'an',
 ])
 
 /**

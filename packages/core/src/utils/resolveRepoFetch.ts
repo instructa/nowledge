@@ -8,8 +8,8 @@ import { fetch } from 'undici'
  * @throws If the GitHub request fails or no repository matches.
  */
 export async function resolveRepo(keyword: string): Promise<string> {
-  const url =
-    `https://api.github.com/search/repositories?q=${encodeURIComponent(
+  const url
+    = `https://api.github.com/search/repositories?q=${encodeURIComponent(
       `${keyword} in:name`,
     )}&per_page=1`
 
