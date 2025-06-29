@@ -7,25 +7,58 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@chatmcp/sdk':
-        specifier: ^1.0.6
-        version: 1.0.6
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.9.0
-        version: 1.9.0
+    devDependencies:
+      '@antfu/eslint-config':
+        specifier: ^4.12.0
+        version: 4.12.0(@typescript-eslint/utils@8.30.1(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3))(@vue/compiler-sfc@3.5.13)(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3)(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1))
+      '@types/node':
+        specifier: ^22.14.1
+        version: 22.14.1
       '@vitest/eslint-plugin':
         specifier: ^1.1.43
         version: 1.1.43(@typescript-eslint/utils@8.30.1(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3))(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3)(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1))
-      citty:
-        specifier: ^0.1.6
-        version: 0.1.6
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
+      esbuild:
+        specifier: ^0.25.2
+        version: 0.25.2
       eslint:
         specifier: ^9.25.1
         version: 9.25.1(jiti@2.4.2)
-      h3:
-        specifier: ^1.15.1
-        version: 1.15.1
+      nodemon:
+        specifier: ^3.1.9
+        version: 3.1.9
+      tsx:
+        specifier: ^4.19.3
+        version: 4.19.3
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      unbuild:
+        specifier: ^3.5.0
+        version: 3.5.0(typescript@5.8.3)
+      vite:
+        specifier: ^6.3.1
+        version: 6.3.1(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1)
+      vitest:
+        specifier: ^3.1.1
+        version: 3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1)
+
+  packages/cli:
+    dependencies:
+      '@nowledge/mcp':
+        specifier: workspace:*
+        version: link:../mcp
+      citty:
+        specifier: ^0.1.6
+        version: 0.1.6
+
+  packages/core:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.9.0
+        version: 1.9.0
       hast-util-from-html:
         specifier: ^2.0.3
         version: 2.0.3
@@ -77,37 +110,24 @@ importers:
       zod:
         specifier: ^3.24.3
         version: 3.24.3
-    devDependencies:
-      '@antfu/eslint-config':
-        specifier: ^4.12.0
-        version: 4.12.0(@typescript-eslint/utils@8.30.1(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3))(@vue/compiler-sfc@3.5.13)(eslint@9.25.1(jiti@2.4.2))(typescript@5.8.3)(vitest@3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1))
-      '@types/node':
-        specifier: ^22.14.1
-        version: 22.14.1
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.5.0
-      esbuild:
-        specifier: ^0.25.2
-        version: 0.25.2
-      nodemon:
-        specifier: ^3.1.9
-        version: 3.1.9
-      tsx:
-        specifier: ^4.19.3
-        version: 4.19.3
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-      unbuild:
-        specifier: ^3.5.0
-        version: 3.5.0(typescript@5.8.3)
-      vite:
-        specifier: ^6.3.1
-        version: 6.3.1(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1)
-      vitest:
-        specifier: ^3.1.1
-        version: 3.1.1(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@2.4.2)(tsx@4.19.3)(yaml@2.7.1)
+
+  packages/mcp:
+    dependencies:
+      '@chatmcp/sdk':
+        specifier: ^1.0.6
+        version: 1.0.6
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@nowledge/core':
+        specifier: workspace:*
+        version: link:../core
+      citty:
+        specifier: ^0.1.6
+        version: 0.1.6
+      h3:
+        specifier: ^1.15.1
+        version: 1.15.1
 
 packages:
 

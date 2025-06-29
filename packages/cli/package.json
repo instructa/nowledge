@@ -1,0 +1,25 @@
+{
+  "name": "nowledge",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "CLI for Nowledge - fetch any public web content and convert to LLM-readable markdown",
+  "license": "MIT",
+  "bin": {
+    "nowledge": "./dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nowledge/mcp": "workspace:*",
+    "citty": "^0.1.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

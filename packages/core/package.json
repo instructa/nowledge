@@ -1,0 +1,43 @@
+{
+  "name": "@nowledge/core",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Core utilities and types for Nowledge",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "hast-util-from-html": "^2.0.3",
+    "hast-util-sanitize": "^5.0.2",
+    "linkedom": "^0.18.9",
+    "ofetch": "^1.4.1",
+    "p-queue": "^8.1.0",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-stringify": "^11.0.0",
+    "robots-parser": "^3.0.1",
+    "undici": "^7.8.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "wink-eng-lite-web-model": "^1.0.0",
+    "wink-nlp": "^1.10.0",
+    "zod": "^3.24.3"
+  }
+}

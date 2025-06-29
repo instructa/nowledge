@@ -1,0 +1,33 @@
+{
+  "name": "@nowledge/mcp",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "MCP server implementation for Nowledge",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "dev:stdio": "node ./dist/index.mjs",
+    "dev:http": "node ./dist/index.mjs --http --port 4200",
+    "dev:sse": "node ./dist/index.mjs --sse --port 4201"
+  },
+  "dependencies": {
+    "@chatmcp/sdk": "^1.0.6",
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "@nowledge/core": "workspace:*",
+    "citty": "^0.1.6",
+    "h3": "^1.15.1"
+  }
+}

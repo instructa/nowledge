@@ -26,3 +26,5 @@ llms_*.txt
 
 .hidden
 repomix-output.xml
+codefetch
+plan
